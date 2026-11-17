@@ -44,7 +44,7 @@ class LifeWidget : AppWidgetProvider() {
         fun refresh(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
             val views = RemoteViews(context.packageName, R.layout.life_widget)
-            val buttons = listOf(R.id.sleep_start, R.id.sleep_end, R.id.departure, R.id.arrival, R.id.schedule_change)
+            val buttons = listOf(R.id.sleep_start, R.id.sleep_end, R.id.departure, R.id.arrival, R.id.concerta)
             buttons.zip(Event.types).forEachIndexed { index, (id, type) ->
                 val intent = Intent(context, LifeWidget::class.java).setAction(TAP).putExtra("type", type)
                 views.setOnClickPendingIntent(id, PendingIntent.getBroadcast(context, index, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))

@@ -21,10 +21,10 @@ Android SDK Build Tools 35.0.0 の `zipalign` と `apksigner` を使用します
 # CI ですでに alignment を確認しています。署名後に zipalign で書き換えないこと。
 zipalign -c -P 16 4 timelog-release-unsigned.apk
 apksigner sign --ks /local/path/timelog-release.jks --ks-key-alias YOUR_ALIAS \
-  --out timelog-1.0-release.apk timelog-release-unsigned.apk
-apksigner verify --verbose --print-certs timelog-1.0-release.apk
-sha256sum timelog-1.0-release.apk > timelog-1.0-release.apk.sha256
-adb install -r timelog-1.0-release.apk
+  --out timelog-1.1-release.apk timelog-release-unsigned.apk
+apksigner verify --verbose --print-certs timelog-1.1-release.apk
+sha256sum timelog-1.1-release.apk > timelog-1.1-release.apk.sha256
+adb install -r timelog-1.1-release.apk
 ```
 
 初回の鍵作成には Android Studio の **Generate Signed Bundle / APK → APK → Create new** を利用できます。継続更新には同じ鍵が必要です。既存の release 版がある場合は必ずその署名鍵を使います。
@@ -33,8 +33,8 @@ debug 版とは署名が異なるため、release 版で上書きできないこ
 
 ## GitHub Release で配布
 
-1. 初回は `versionCode=1` / `versionName=1.0` です。更新時はビルド前に versionCode を増やし、versionName も更新します。
-2. main の配布対象コミットに `v1.0.0` 等のタグを付け、GitHub Releases でそのタグの **Draft release** を作ります。
+1. 現在は `versionCode=2` / `versionName=1.1` です。更新時はビルド前に versionCode を増やし、versionName も更新します。
+2. main の配布対象コミットに `v1.1.0` 等のタグを付け、GitHub Releases でそのタグの **Draft release** を作ります。
 3. アプリの対応 Android バージョン、初期設定、private の `timelog-events` を使うこと、署名証明書の SHA-256 fingerprint を説明に記載します。
 4. **署名済み APK と署名後の SHA-256 ファイルだけ**を Release assets に添付します。未署名 APK、keystore、パスワード、PAT、端末のデータベースは添付しません。
 5. 実機でインストールと private リポジトリへの送信を確認してから公開します。

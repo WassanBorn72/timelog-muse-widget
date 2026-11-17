@@ -13,7 +13,7 @@ import java.util.UUID
 data class Event(val id: String, val type: String, val timestamp: String, val device: String, val repository: String) {
     fun json() = JSONObject().put("id", id).put("type", type).put("timestamp", timestamp).put("device", device)
     companion object {
-        val types = listOf("sleep_start", "sleep_end", "departure", "arrival", "schedule_change")
+        val types = listOf("sleep_start", "sleep_end", "departure", "arrival", "concerta")
         fun now(type: String, repository: String): Event {
             require(type in types)
             return Event(UUID.randomUUID().toString(), type, OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME), Build.MODEL, repository)

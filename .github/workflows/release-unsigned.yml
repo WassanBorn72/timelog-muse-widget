@@ -3,7 +3,7 @@ name: Unsigned release APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, build/unsigned-release]
+    branches: [main, build/unsigned-release, feat/v1.1]
     paths:
       - '.github/workflows/release-unsigned.yml'
       - 'app/**'
@@ -35,6 +35,7 @@ jobs:
       - name: Build unsigned release APK
         run: ./gradlew --no-daemon --stacktrace assembleRelease
       - name: Prepare unsigned APK and provenance
+        id: prepare
         env:
           SOURCE_COMMIT: ${{ github.sha }}
           SOURCE_REF: ${{ github.ref }}
@@ -47,6 +48,8 @@ jobs:
           "$tools/zipalign" -c -P 16 4 "$apk"
           mkdir -p dist
           cp "$apk" dist/timelog-release-unsigned.apk
+          apk_bytes=$(stat -c%s "$apk")
+          printf 'apk_bytes=%s\n' "$apk_bytes" >> "$GITHUB_OUTPUT"
           "$tools/aapt" dump badging "$apk" > dist/APK-METADATA.txt
           if "$tools/apksigner" verify "$apk" > /tmp/signature-check.txt 2>&1; then
             echo "Expected an unsigned APK, but a valid signature was found."
@@ -54,11 +57,12 @@ jobs:
           fi
           printf 'Commit: %s\nRef: %s\nRun: %s\nSigning: UNSIGNED; sign locally before installation.\n' \
             "$SOURCE_COMMIT" "$SOURCE_REF" "$RUN_URL" > dist/BUILD-INFO.txt
+          printf 'APK bytes: %s\n' "$apk_bytes" >> dist/BUILD-INFO.txt
           cp docs/APK_RELEASE.md dist/SIGNING.md
           (cd dist && sha256sum timelog-release-unsigned.apk > SHA256SUMS)
           cat dist/BUILD-INFO.txt >> "$GITHUB_STEP_SUMMARY"
           cat dist/SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
-      - name: Upload unsigned release APK
+      - name: Upload unsigned release APK (${{ steps.prepare.outputs.apk_bytes }} bytes)
         uses: actions/upload-artifact@v4
         with:
           name: timelog-release-unsigned
