@@ -92,3 +92,19 @@ Muse は本文を読み、処理後に `processed` ラベルを付けるか Issu
 6. ホームアプリからウィジェットを複数追加しても全ボタンが動き、タップでアプリ画面が開かないこと。
 
 実機確認では個人の生活記録と区別できるテスト用 private リポジトリの使用を推奨します。
+
+## CI と自分用の署名済み APK
+
+Actions の `Android` ワークフローは push / PR / 手動実行に対応します。Ubuntu 24.04、JDK 17、Command-line Tools 13114758、SDK 35 / Build Tools 35.0.0 を使います。廃止された SDK の `tools` パッケージは要求しません。`build` は APK ビルド後に JVM テストと Lint、`device-tests` は API 29 のエミュレータで端末テストを行います。失敗時にも取得できたテスト・Lint レポートを成果物として残します。debug APK は署名済み release APK の代わりにはなりません。
+
+署名済み APK は Muse 側のローカル環境で作成してください。
+
+1. CI の成功したコミットをローカルで取得します。Android Studio に JDK 17 以上と SDK 35 / Build Tools 35.0.0 を用意します。
+2. Android Studio の **Build → Generate Signed Bundle / APK → APK** を開きます。
+3. 既存の鍵があれば同じ鍵を選びます。初回のみ、**リポジトリの外**に keystore を作成し、alias・パスワードとともに安全に保管・バックアップします。鍵やパスワードをチャット・GitHub・CI 成果物に置かないでください。
+4. `release` を選択し、署名付き APK を生成します。本プロジェクトは署名情報をソースや Gradle ファイルに保存しません。パスワードを保存する場合も Android Studio の安全な保存機能を使います。
+5. Android SDK の `apksigner verify --verbose --print-certs <APKのパス>` で署名を検証してから端末へインストールします。
+6. debug 版と release 版で署名が異なる場合は上書きできません。未送信件数を0にしてから debug 版をアンインストールし、release 版を入れてトークンを再設定してください（アンインストールで設定と未送信キューが消えます）。
+7. 継続的に更新する場合は同じ署名鍵を使用し、更新ごとに `versionCode` と `versionName` を上げてください。
+
+署名鍵、alias、鍵のパスワードがローカルに揃うまでは release APK の署名は完了できません。CI のビルド成功だけでは、実機での送信成功や署名済み APK の完成を意味しません。
