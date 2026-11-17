@@ -26,7 +26,7 @@ class LifeWidget : AppWidgetProvider() {
             try {
                 Store(context).use { it.add(event) }
                 val hasToken = runCatching { Settings(context).token().isNotBlank() }.getOrDefault(false)
-                Settings(context).status = if (hasToken) "記録しました ${event.timestamp}" else "トークン未設定・端末内に保存しました"
+                Settings(context).status = if (hasToken) "送信待ち" else "トークン未設定・端末内に保存しました"
                 refresh(context)
                 Handler(Looper.getMainLooper()).post {
                     Toast.makeText(context, if (hasToken) "記録しました" else "記録しました（トークン未設定）", Toast.LENGTH_SHORT).show()

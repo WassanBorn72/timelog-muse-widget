@@ -22,7 +22,7 @@ class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, p
                 first = { store.first() },
                 remove = { event: Event ->
                     store.remove(event.id)
-                    settings.status = "送信済み ${event.timestamp}"
+                    settings.status = "送信しました"
                     LifeWidget.refresh(applicationContext)
                 },
                 stopped = { isStopped },
