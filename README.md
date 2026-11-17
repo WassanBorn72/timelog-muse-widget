@@ -108,3 +108,5 @@ Actions の `Android` ワークフローは push / PR / 手動実行に対応し
 7. 継続的に更新する場合は同じ署名鍵を使用し、更新ごとに `versionCode` と `versionName` を上げてください。
 
 署名鍵、alias、鍵のパスワードがローカルに揃うまでは release APK の署名は完了できません。CI のビルド成功だけでは、実機での送信成功や署名済み APK の完成を意味しません。
+
+未署名 release APK は専用の **Unsigned release APK** Actions ワークフローで生成できます。成功した run の artifact `timelog-release-unsigned` を取得し、Muse 側でローカル署名します。既存の debug ワークフローは変更しません。詳しくは [APK の取得・署名・Release 配布手順](docs/APK_RELEASE.md) を参照してください。
