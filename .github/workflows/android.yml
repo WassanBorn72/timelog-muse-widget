@@ -19,9 +19,13 @@ jobs:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v5
       - name: Build APKs
+        id: build_apks
         run: ./gradlew --no-daemon --stacktrace assembleDebug assembleDebugAndroidTest
-      - name: Unit tests and lint
-        run: ./gradlew --no-daemon --stacktrace testDebugUnitTest lintDebug
+      - name: Unit tests
+        run: ./gradlew --no-daemon --stacktrace testDebugUnitTest
+      - name: Android lint
+        if: ${{ !cancelled() }}
+        run: ./gradlew --no-daemon --stacktrace lintDebug
       - name: Upload test and lint reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -30,6 +34,7 @@ jobs:
           path: app/build/reports/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && steps.build_apks.outcome == 'success' }}
         with:
           name: life-widget-debug
           path: app/build/outputs/apk/debug/*.apk
