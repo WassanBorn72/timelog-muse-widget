@@ -21,7 +21,9 @@ data class Event(val id: String, val type: String, val timestamp: String, val de
     }
 }
 
-class Store(context: Context) : SQLiteOpenHelper(context, "events.db", null, 1) {
+// SQLiteOpenHelper only implements AutoCloseable on newer Android releases.
+// Declare Closeable ourselves so Kotlin use() is safe on every supported API.
+class Store(context: Context) : SQLiteOpenHelper(context, "events.db", null, 1), java.io.Closeable {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE events (sequence INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT UNIQUE NOT NULL, type TEXT NOT NULL, timestamp TEXT NOT NULL, device TEXT NOT NULL, repository TEXT NOT NULL)")
     }

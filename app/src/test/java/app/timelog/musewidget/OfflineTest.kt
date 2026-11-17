@@ -12,7 +12,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [28])
+@Config(sdk = [26, 28, 29])
 class OfflineTest {
     private lateinit var context: Context
     @Before fun prepare() {
