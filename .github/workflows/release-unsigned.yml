@@ -1,0 +1,78 @@
+name: Unsigned release APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, build/unsigned-release, feat/v1.1]
+    paths:
+      - '.github/workflows/release-unsigned.yml'
+      - 'app/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'gradle.properties'
+      - 'gradlew'
+      - 'docs/APK_RELEASE.md'
+
+permissions:
+  contents: read
+
+jobs:
+  release-unsigned:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK 35
+        uses: android-actions/setup-android@v4
+        with:
+          cmdline-tools-version: '13114758'
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Build unsigned release APK
+        run: ./gradlew --no-daemon --stacktrace assembleRelease
+      - name: Prepare unsigned APK and provenance
+        id: prepare
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          SOURCE_REF: ${{ github.ref }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release-unsigned.apk
+          tools="$ANDROID_HOME/build-tools/35.0.0"
+          test -s "$apk"
+          "$tools/zipalign" -c -P 16 4 "$apk"
+          mkdir -p dist
+          cp "$apk" dist/timelog-release-unsigned.apk
+          apk_bytes=$(stat -c%s "$apk")
+          printf 'apk_bytes=%s\n' "$apk_bytes" >> "$GITHUB_OUTPUT"
+          "$tools/aapt" dump badging "$apk" > dist/APK-METADATA.txt
+          if "$tools/apksigner" verify "$apk" > /tmp/signature-check.txt 2>&1; then
+            echo "Expected an unsigned APK, but a valid signature was found."
+            exit 1
+          fi
+          printf 'Commit: %s\nRef: %s\nRun: %s\nSigning: UNSIGNED; sign locally before installation.\n' \
+            "$SOURCE_COMMIT" "$SOURCE_REF" "$RUN_URL" > dist/BUILD-INFO.txt
+          printf 'APK bytes: %s\n' "$apk_bytes" >> dist/BUILD-INFO.txt
+          cp docs/APK_RELEASE.md dist/SIGNING.md
+          (cd dist && sha256sum timelog-release-unsigned.apk > SHA256SUMS)
+          cat dist/BUILD-INFO.txt >> "$GITHUB_STEP_SUMMARY"
+          cat dist/SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload unsigned release APK (${{ steps.prepare.outputs.apk_bytes }} bytes)
+        uses: actions/upload-artifact@v4
+        with:
+          name: timelog-release-unsigned
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload release build reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-build-reports
+          path: app/build/reports/
+          if-no-files-found: ignore
