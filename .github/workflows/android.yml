@@ -23,6 +23,23 @@ jobs:
         run: ./gradlew --no-daemon --stacktrace assembleDebug assembleDebugAndroidTest
       - name: Unit tests
         run: ./gradlew --no-daemon --stacktrace testDebugUnitTest
+      - name: Summarize unit test failures
+        if: always()
+        shell: python
+        run: |
+          import glob, os, xml.etree.ElementTree as ET
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write("## JVM test results\n")
+              reports = glob.glob("app/build/test-results/testDebugUnitTest/TEST-*.xml")
+              if not reports:
+                  summary.write("No JUnit XML reports were produced; inspect the Unit tests step log.\n")
+              for path in reports:
+                  root = ET.parse(path).getroot()
+                  summary.write(f"- {root.get('name')}: tests={root.get('tests')}, failures={root.get('failures')}, errors={root.get('errors')}\n")
+                  for case in root.findall("testcase"):
+                      for failure in list(case.findall("failure")) + list(case.findall("error")):
+                          message = failure.get("message", "").splitlines()
+                          summary.write(f"  - {case.get('name')}: {message[0] if message else failure.get('type', 'failure')}\n")
       - name: Android lint
         if: ${{ !cancelled() }}
         run: ./gradlew --no-daemon --stacktrace lintDebug
