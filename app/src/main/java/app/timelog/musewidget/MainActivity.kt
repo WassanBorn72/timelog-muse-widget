@@ -25,7 +25,7 @@ class MainActivity : Activity() {
         fun text(value: String) { layout.addView(TextView(this).apply { text = value; textSize = 18f }) }
         text("生活ボタン 設定")
         summary = TextView(this); layout.addView(summary)
-        text("送信先（owner/repository）")
+        text("送信先 private リポジトリ（owner/repository）")
         val repository = EditText(this).apply { setSingleLine(); setText(settings.repository); inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI }
         layout.addView(repository)
         text("GitHub fine-grained token（空欄は既存値を維持）")
@@ -40,7 +40,7 @@ class MainActivity : Activity() {
             setOnClickListener {
                 val repo = repository.text.toString().trim()
                 val newToken = token.text.toString().trim()
-                if (!Settings.validRepository(repo)) { repository.error = "owner/repository の形式で入力してください"; return@setOnClickListener }
+                if (!Settings.validRepository(repo)) { repository.error = "private の owner/repository を入力してください。コード用リポジトリは指定できません"; return@setOnClickListener }
                 if (newToken.any { it.isWhitespace() || it.code < 32 }) { token.error = "トークンの形式を確認してください"; return@setOnClickListener }
                 try {
                     if (newToken.isNotEmpty()) settings.saveToken(newToken)

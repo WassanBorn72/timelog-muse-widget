@@ -32,6 +32,17 @@ class OfflineTest {
             assertNull(store.first())
         }
     }
+    @Test fun legacyCodeQueueMovesWithoutChangingEventIdentityOrOtherDestinations() {
+        val legacy = Event.now("arrival", "wassanborn72/TIMELOG-MUSE-WIDGET")
+        val custom = Event.now("departure", "someone/private-events")
+        Store(context).use { it.add(legacy); it.add(custom); it.retargetCodeQueue(Destination.DEFAULT) }
+        Store(context).use {
+            assertEquals(2, it.count())
+            assertEquals(legacy.copy(repository = Destination.DEFAULT), it.first())
+            it.remove(legacy.id)
+            assertEquals(custom, it.first())
+        }
+    }
     @Test fun destinationChangeDoesNotRedirectPendingEvents() {
         val first = Event.now("departure", "owner/original")
         Store(context).use { it.add(first) }

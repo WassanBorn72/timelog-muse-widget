@@ -18,6 +18,7 @@ class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, p
             return Result.success()
         }
         Store(applicationContext).use { store ->
+            store.retargetCodeQueue(settings.repository)
             val drained = QueueDrain(
                 first = { store.first() },
                 remove = { event: Event ->

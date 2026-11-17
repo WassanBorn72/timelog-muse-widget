@@ -6,6 +6,7 @@ import java.net.URL
 
 internal class IssueClient(private val endpoint: (Event) -> URL = { URL("https://api.github.com/repos/${it.repository}/issues") }) {
     fun send(event: Event, token: String): Int {
+        require(Destination.valid(event.repository)) { "Code repository cannot receive events" }
         val connection = endpoint(event).openConnection() as HttpURLConnection
         try {
             connection.requestMethod = "POST"

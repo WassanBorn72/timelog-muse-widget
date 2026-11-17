@@ -13,8 +13,8 @@ import javax.crypto.spec.GCMParameterSpec
 class Settings(context: Context) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     var repository: String
-        get() = prefs.getString("repository", "WassanBorn72/timelog-muse-widget")!!
-        set(value) { check(prefs.edit().putString("repository", value).commit()) }
+        get() = Destination.configured(prefs.getString("repository", null))
+        set(value) { require(validRepository(value)); check(prefs.edit().putString("repository", value).commit()) }
     var status: String
         get() = prefs.getString("status", "")!!
         set(value) { prefs.edit().putString("status", value).apply() }
@@ -40,6 +40,6 @@ class Settings(context: Context) {
         check(prefs.edit().putString("token", Base64.encodeToString(cipher.iv, Base64.NO_WRAP) + ":" + Base64.encodeToString(encrypted, Base64.NO_WRAP)).commit())
     }
     companion object {
-        fun validRepository(value: String) = Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+").matches(value)
+        fun validRepository(value: String) = Destination.valid(value)
     }
 }

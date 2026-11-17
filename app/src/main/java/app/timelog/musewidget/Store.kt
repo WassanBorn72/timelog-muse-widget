@@ -35,6 +35,12 @@ class Store(context: Context) : SQLiteOpenHelper(context, "events.db", null, 1) 
     fun first(): Event? = readableDatabase.rawQuery("SELECT id,type,timestamp,device,repository FROM events ORDER BY sequence LIMIT 1", null).use {
         if (it.moveToFirst()) Event(it.getString(0), it.getString(1), it.getString(2), it.getString(3), it.getString(4)) else null
     }
+    // Only the formerly unsafe code destination is migrated; other destinations stay pinned.
+    fun retargetCodeQueue(destination: String) {
+        require(Destination.valid(destination))
+        writableDatabase.update("events", ContentValues().apply { put("repository", destination) },
+            "repository = ? COLLATE NOCASE", arrayOf(Destination.CODE))
+    }
     fun count(): Int = readableDatabase.rawQuery("SELECT COUNT(*) FROM events", null).use { it.moveToFirst(); it.getInt(0) }
     fun remove(id: String) { writableDatabase.delete("events", "id=?", arrayOf(id)) }
 }
